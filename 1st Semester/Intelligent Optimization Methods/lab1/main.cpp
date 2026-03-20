@@ -1,5 +1,6 @@
 #include <iostream>
 #include <iomanip>
+#include <fstream>
 #include <string>
 #include <vector>
 #include <random>
@@ -91,17 +92,17 @@ int main() {
         }
 
         // faza I
-        std::cout << "=== Wyniki po FAZIE I (pelny cykl Hamiltona) ===\n";
+        std::cout << "Wyniki po I fazie\n";
         std::cout << "    srednia (min - max)\n\n";
         printStatsTable(labels, statsA, statsB, true);
 
         // faza II
-        std::cout << "=== Wyniki po FAZIE II (po usunieciu wierzcholkow) ===\n";
+        std::cout << "Wyniki po II fazie\n";
         std::cout << "    srednia (min - max)\n\n";
         printStatsTable(labels, statsA, statsB, false);
 
         // Najlepsze rozwiazania
-        std::cout << "=== Najlepsze rozwiazania ===\n";
+        std::cout << "Najlepsze rozwiazania\n";
         for (int i = 0; i < (int)labels.size(); ++i) {
             std::cout << "  " << std::left << std::setw(12) << labels[i] << std::right
                       << "  TSPA: wynik=" << std::setw(7) << tspA.evaluate(statsA[i].bestTour)
@@ -109,6 +110,24 @@ int main() {
                       << "  ||  TSPB: wynik=" << std::setw(7) << tspB.evaluate(statsB[i].bestTour)
                       << "  n=" << std::setw(3) << statsB[i].bestTour.size() << "\n";
         }
+
+        // Eksport najlepszych rozwiązań do plików dla Solution Checkera
+        // Format: jedna liczba na linię = ID wierzchołka (0-indexed), wkleić do kolumny F od wiersza 3
+        std::cout << "\nEksport rozwiazań do plikow solution_*.txt ...\n";
+        for (int i = 0; i < (int)labels.size(); ++i) {
+            auto exportTour = [&](const std::string& instance,
+                                  const std::vector<int>& tour) {
+                std::string fname = "solution_" + instance + "_" + labels[i] + ".txt";
+                // zamień spacje na podkreślniki w nazwie pliku
+                for (char& c : fname) if (c == ' ') c = '_';
+                std::ofstream f(fname);
+                for (int node : tour)
+                    f << node << "\n";
+            };
+            exportTour("TSPA", statsA[i].bestTour);
+            exportTour("TSPB", statsB[i].bestTour);
+        }
+        std::cout << "Gotowe. Wklej zawartosc pliku do kolumny F (od wiersza 3) w Solution checker2.xlsx\n";
 
     } catch (const std::exception& e) {
         std::cerr << "Blad: " << e.what() << "\n";
